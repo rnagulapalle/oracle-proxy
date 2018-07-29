@@ -1,11 +1,13 @@
-package com.rco.oracleproxy.api.invoice;
+package com.rco.oracleproxy.api;
 
-import com.rco.oracleproxy.api.AbstractRestHandler;
 import com.rco.oracleproxy.client.InvoiceServiceClient;
 import com.rco.oracleproxy.domain.invoice.Invoice;
+import com.rco.oracleproxy.response.InvoiceResponse;
+import com.rco.oracleproxy.response.Status;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +34,7 @@ import java.io.StringReader;
 
 
 /**
+ * TODO: clean up code and refactor common business logic
  * Created by rnagulapalle on 7/22/18.
  */
 @Controller
@@ -39,6 +42,7 @@ import java.io.StringReader;
 @Api(tags = {"account-receivable-invoice"})
 public class InvoiceController extends AbstractRestHandler {
 
+    // TODO : add input validation
     @RequestMapping(value = "",
             method = RequestMethod.POST,
             consumes = {"application/json", "application/xml"},
@@ -68,7 +72,7 @@ public class InvoiceController extends AbstractRestHandler {
      }
      }
      */
-    public void createInvoice(@RequestBody Invoice invoice,
+    public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
         //Hotel createdHotel = this.hotelService.createHotel(hotel);
         //response.setHeader("Location", request.getRequestURL().append("/").append(createdHotel.getId()).toString());
@@ -100,15 +104,23 @@ public class InvoiceController extends AbstractRestHandler {
             XPath xpath = xpathFactory.newXPath();
             String servStatus = xpath.evaluate("Envelope/Body/createSimpleInvoiceResponse/result/ServiceStatus", document);
             String trxNumber = xpath.evaluate("Envelope/Body/createSimpleInvoiceResponse/result/TransactionNumber", document);
+
             if ("".equals(servStatus) && "".equals(trxNumber)) {
                 System.out.println("Service Errored. Parse the Response to review the Error Message ");
                 printDocument(document, System.out);
-            } else {
-                System.out.println("Service Status = " + servStatus);
-                System.out.println("Transaction Number = " + trxNumber);
+                return new ResponseEntity<>("Failed to create an invoice due to SOAP API failed", HttpStatus.INTERNAL_SERVER_ERROR);
             }
+            System.out.println("Service Status = " + servStatus);
+            System.out.println("Transaction Number = " + trxNumber);
+            InvoiceResponse invoiceResponse = new InvoiceResponse();
+            invoiceResponse.setStatus(new Status(servStatus));
+            invoiceResponse.setTransactionNumber(Long.valueOf(trxNumber));
+
+            return new ResponseEntity<>(invoiceResponse, HttpStatus.OK);
         }
-        response.setHeader("Location", "hello");
+
+        //response.setHeader("Location", "hello")
+        return new ResponseEntity<>("Oracle SOAP API failed", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public static void printDocument(Document doc, OutputStream out) throws IOException, TransformerException {

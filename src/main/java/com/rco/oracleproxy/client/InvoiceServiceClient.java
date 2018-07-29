@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+// TODO: clean up code and refactor common business logic
 public class InvoiceServiceClient {
 
     public InvoiceServiceClient() {
@@ -212,4 +213,5 @@ public class InvoiceServiceClient {
                         getInputPayload(), getUsername() +
                                 ":" + getPassword(), keyStoreLocation, keyStorePassword);
         return response;
-    }}
+    }
+}
