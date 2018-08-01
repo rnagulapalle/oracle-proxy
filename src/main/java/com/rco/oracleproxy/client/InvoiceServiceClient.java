@@ -4,7 +4,8 @@ package com.rco.oracleproxy.client;
  * Created by rnagulapalle on 7/18/18.
  */
 
-import com.rco.oracleproxy.domain.invoice.Invoice;
+import com.rco.oracleproxy.domain.invoice.InvoiceLine;
+import com.rco.oracleproxy.domain.invoice.SimpleInvoice;
 import com.rco.oracleproxy.util.Base64;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 
 // TODO: clean up code and refactor common business logic
 public class InvoiceServiceClient {
@@ -150,7 +152,7 @@ public class InvoiceServiceClient {
         return outputPayload;
     }
 
-    public String constructPayload(Invoice invoice) {
+    public String constructPayload(SimpleInvoice invoice) {
         String payload = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:inv=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/invoices/invoiceService/\" xmlns:tran=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionHeaderDff/\" xmlns:tran1=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionHeaderGdf/\" xmlns:tran2=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionInterfaceHeaderDff/\" xmlns:tran3=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionInterfaceLineDff/\" xmlns:tran4=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionLineDff/\" xmlns:tran5=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/shared/model/flex/TransactionLineGdf/\" xmlns:typ=\"http://xmlns.oracle.com/apps/financials/receivables/transactions/invoices/invoiceService/types/\">\n"
                 + "   <soapenv:Header />\n"
@@ -158,43 +160,55 @@ public class InvoiceServiceClient {
                 + "      <typ:createSimpleInvoice>\n"
                 + "         <typ:invoiceHeaderInformation>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:BusinessUnit>"+invoice.getInvoiceHeader().getBusinessUnit()+"</inv:BusinessUnit>\n"
+                + "            <inv:BusinessUnit>"+invoice.getInvoiceHeaderInformation().getBusinessUnit()+"</inv:BusinessUnit>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:TransactionSource>"+invoice.getInvoiceHeader().getTransactionSource()+"</inv:TransactionSource>\n"
+                + "            <inv:TransactionSource>"+invoice.getInvoiceHeaderInformation().getTransactionSource()+"</inv:TransactionSource>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:TransactionType>"+invoice.getInvoiceHeader().getTransactionType()+"</inv:TransactionType>\n"
+                + "            <inv:TransactionType>"+invoice.getInvoiceHeaderInformation().getTransactionType()+"</inv:TransactionType>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:TrxDate>"+invoice.getInvoiceHeader().getTrxDate()+"</inv:TrxDate>\n"
+                + "            <inv:TrxDate>"+invoice.getInvoiceHeaderInformation().getTrxDate()+"</inv:TrxDate>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:GlDate>"+invoice.getInvoiceHeader().getGlDate()+"</inv:GlDate>\n"
+                + "            <inv:GlDate>"+invoice.getInvoiceHeaderInformation().getGlDate()+"</inv:GlDate>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:BillToCustomerName>"+invoice.getInvoiceHeader().getBillToCustomerName()+"</inv:BillToCustomerName>\n"
+                + "            <inv:BillToCustomerName>"+invoice.getInvoiceHeaderInformation().getBillToCustomerName()+"</inv:BillToCustomerName>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:BillToAccountNumber>"+invoice.getInvoiceHeader().getBillToAccountNumber()+"</inv:BillToAccountNumber>\n"
+                + "            <inv:BillToAccountNumber>"+invoice.getInvoiceHeaderInformation().getBillToAccountNumber()+"</inv:BillToAccountNumber>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:PaymentTermsName>"+invoice.getInvoiceHeader().getPaymentTermsName()+"</inv:PaymentTermsName>\n"
+                + "            <inv:PaymentTermsName>"+invoice.getInvoiceHeaderInformation().getPaymentTermsName()+"</inv:PaymentTermsName>\n"
                 + "            <!--Optional:-->\n"
-                + "            <inv:InvoiceCurrencyCode>"+invoice.getInvoiceHeader().getInvoiceCurrencyCode()+"</inv:InvoiceCurrencyCode>\n"
+                + "            <inv:InvoiceCurrencyCode>"+invoice.getInvoiceHeaderInformation().getInvoiceCurrencyCode()+"</inv:InvoiceCurrencyCode>\n"
                 + "            <!--Zero or more repetitions:-->\n"
-                + "            <inv:InvoiceLine>\n"
-                + "               <!--Optional:-->\n"
-                + "               <inv:LineNumber>"+invoice.getInvoiceLine().getLineNumber()+"</inv:LineNumber>\n"
-                + "               <!--Optional:-->\n"
-                + "               <inv:Description>"+invoice.getInvoiceLine().getDescription()+"</inv:Description>\n"
-                + "               <!--Optional:-->\n"
-                + "               <inv:Quantity unitCode=\""+invoice.getInvoiceLine().getUnitCode()+"\">"+invoice.getInvoiceLine().getQuantity()+"</inv:Quantity>\n"
-                + "               <!--Optional:-->\n"
-                + "               <inv:UnitSellingPrice currencyCode=\""+invoice.getInvoiceLine().getCurrencyCode()+"\">"+invoice.getInvoiceLine().getUnitSellingPrice()+"</inv:UnitSellingPrice>\n"
-                + "               <!--Optional:-->\n"
-                + "            </inv:InvoiceLine>\n"
+                +               getInvoiceLines(invoice)
                 + "         </typ:invoiceHeaderInformation>\n"
                 + "      </typ:createSimpleInvoice>\n"
                 + "   </soapenv:Body>\n"
                 + "</soapenv:Envelope>";
         return payload;
     }
+
+    private String getInvoiceLines(SimpleInvoice invoice) {
+        StringBuilder builder = new StringBuilder();
+        InvoiceLine[] invoiceLines = invoice.getInvoiceLines();
+        for(InvoiceLine invoiceLine: invoiceLines) {
+            String invoiceLineStr = "<inv:InvoiceLine>\n"
+                    + " <!--Optional:-->\n"
+                    + "               <inv:LineNumber>"+invoiceLine.getLineNumber()+"</inv:LineNumber>\n"
+                    + "               <!--Optional:-->\n"
+                    + "               <inv:Description>"+invoiceLine.getDescription()+"</inv:Description>\n"
+                    + "               <!--Optional:-->\n"
+                    + "               <inv:Quantity unitCode=\""+invoiceLine.getUnitCode()+"\">"+invoiceLine.getQuantity()+"</inv:Quantity>\n"
+                    + "               <!--Optional:-->\n"
+                    + "               <inv:UnitSellingPrice currencyCode=\""+invoiceLine.getCurrencyCode()+"\">"+invoiceLine.getUnitSellingPrice()+"</inv:UnitSellingPrice>\n"
+                    + "               <!--Optional:-->\n"
+                    + "            </inv:InvoiceLine>\n";
+            builder.append(invoiceLineStr);
+        }
+
+        return builder.toString();
+    }
+
     public String createInvoice(String hostName, int port, String username,
-            String password, Invoice invoice, String keyStoreLocation,
+            String password, SimpleInvoice invoice, String keyStoreLocation,
             String keyStorePassword) throws Exception {
         if (port < 0)
             this.setWebService("https://" + hostName +

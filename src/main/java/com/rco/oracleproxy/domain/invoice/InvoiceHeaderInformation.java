@@ -3,7 +3,7 @@ package com.rco.oracleproxy.domain.invoice;
 /**
  * Created by rnagulapalle on 7/22/18.
  */
-public class InvoiceHeader {
+public class InvoiceHeaderInformation {
 
     private String transactionType;
 

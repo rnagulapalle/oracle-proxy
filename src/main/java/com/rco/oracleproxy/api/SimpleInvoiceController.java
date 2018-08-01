@@ -1,7 +1,7 @@
 package com.rco.oracleproxy.api;
 
 import com.rco.oracleproxy.client.InvoiceServiceClient;
-import com.rco.oracleproxy.domain.invoice.Invoice;
+import com.rco.oracleproxy.domain.invoice.SimpleInvoice;
 import com.rco.oracleproxy.response.InvoiceResponse;
 import com.rco.oracleproxy.response.Status;
 import io.swagger.annotations.Api;
@@ -40,7 +40,7 @@ import java.io.StringReader;
 @Controller
 @RequestMapping(value = "/v1/account-receivable/invoice")
 @Api(tags = {"account-receivable-invoice"})
-public class InvoiceController extends AbstractRestHandler {
+public class SimpleInvoiceController extends AbstractRestHandler {
 
     // TODO : add input validation
     @RequestMapping(value = "",
@@ -72,7 +72,7 @@ public class InvoiceController extends AbstractRestHandler {
      }
      }
      */
-    public ResponseEntity<?> createInvoice(@RequestBody Invoice invoice,
+    public ResponseEntity<?> createInvoice(@RequestBody SimpleInvoice invoice,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
         //Hotel createdHotel = this.hotelService.createHotel(hotel);
         //response.setHeader("Location", request.getRequestURL().append("/").append(createdHotel.getId()).toString());
@@ -115,6 +115,7 @@ public class InvoiceController extends AbstractRestHandler {
             InvoiceResponse invoiceResponse = new InvoiceResponse();
             invoiceResponse.setStatus(new Status(servStatus));
             invoiceResponse.setTransactionNumber(Long.valueOf(trxNumber));
+            
 
             return new ResponseEntity<>(invoiceResponse, HttpStatus.OK);
         }
